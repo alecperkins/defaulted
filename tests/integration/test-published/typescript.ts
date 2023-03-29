@@ -1,6 +1,6 @@
-import conf from "defaulted";
+import defaulted from "defaulted";
 
-const config = conf({
+const config = defaulted({
   ENVIRONMENT: 'local',
   MY_HOST: "example.com",
   PORT: 1234,
