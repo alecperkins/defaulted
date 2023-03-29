@@ -55,6 +55,9 @@ const defaulted: (
       }
       (actual_config as any)[_key] = _override;
     }
+    if (typeof actual_config[key] === "undefined") {
+      throw new Error(`Required key not present in env: "${ key }"`);
+    }
   });
 
   // Set this last so it doesn't get caught in validation.
