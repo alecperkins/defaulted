@@ -3,28 +3,27 @@
  * defaults and allowing for per-environment values and overrides via process.env.
  * 
  * 
- * @param defaults The default configuration values.
- * @param environment_overrides set or unset defaults for an explicit process.env.ENVIRONMENT
+ * @param defaults - The default configuration values.
+ * @param environment_overrides - set or unset defaults for an explicit process.env.ENVIRONMENT
  * @returns the config combined from defaults, overrides and process.env
  */
-const conf: (
-  <T extends {}>(defaults: T, environment_overrides?: { [env: string]: Partial<T> }) => T
-) = function conf (defaults, environment_overrides) {
+const defaulted: (
+  <T extends {}>(defaults: T, environment_overrides?: { [env: string]: Partial<T> }) => { readonly [key in keyof T]: T[key] }
+) = function defaulted (defaults, environment_overrides) {
 
-  const config: typeof defaults = {
+  const actual_config: typeof defaults = {
     ...defaults,
-    ENVIRONMENT: process.env.ENVIRONMENT,
   };
 
   if (environment_overrides && process.env.ENVIRONMENT) {
-    Object.assign(config, environment_overrides[process.env.ENVIRONMENT] ?? {})
+    Object.assign(actual_config, environment_overrides[process.env.ENVIRONMENT] ?? {})
   }
 
-  Object.keys(config).forEach((key) => {
+  Object.keys(actual_config).forEach((key) => {
     const _key = key as keyof typeof defaults;
     const override = process.env[_key as string];
     if (typeof override === "string") {
-      let _override;
+      let _override: string | number | boolean;
       switch (typeof defaults[_key]) {
         case "number": {
           _override = Number(override);
@@ -48,11 +47,24 @@ const conf: (
           _override = override;
         }
       }
-      (config as any)[_key] = _override;
+      (actual_config as any)[_key] = _override;
     }
   });
 
-  return config;
+  // Set this last so it doesn't get caught in validation.
+  Object.assign(actual_config, {
+    ENVIRONMENT: process.env.ENVIRONMENT,
+  });
+
+  const config = new Proxy(actual_config, {
+    get: (orig, key) => {
+      if ((Object as any).hasOwn(orig, key)) {
+      return orig[key];
+      }
+      throw new Error(`Cannot read unspecified property "${ String(key) }"`);
+    },
+  });
+  return Object.freeze(config);
 }
 
-export default conf;
+export default defaulted;
