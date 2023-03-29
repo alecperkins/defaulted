@@ -45,7 +45,7 @@ const defaulted: (
           } else if (override === "0") {
             _override = false;
           } else {
-            _override = Boolean(override);
+            throw new Error(`Cannot cast to boolean from "${ override }"`);
           }
           break;
         }
