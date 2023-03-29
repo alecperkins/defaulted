@@ -26,7 +26,13 @@ const defaulted: (
       let _override: string | number | boolean;
       switch (typeof defaults[_key]) {
         case "number": {
+          if (override === "") {
+            throw new Error(`Cannot cast to number from ""`);
+          }
           _override = Number(override);
+          if (Number.isNaN(_override)) {
+            throw new Error(`Cannot cast to number from "${ override }"`);
+          }
           break;
         }
         case "boolean": {
