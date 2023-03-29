@@ -1,17 +1,17 @@
 {
-  "name": "typed-conf",
+  "name": "defaulted",
   "version": "0.0.0",
   "description": "",
   "author": "Alec Perkins <mail@alecperkins.me>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/alecperkins/typed-conf/issues"
+    "url": "https://github.com/alecperkins/defaulted/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alecperkins/typed-conf.git"
+    "url": "git+https://github.com/alecperkins/defaulted.git"
   },
-  "homepage": "https://alecperkins.net/typed-conf",
+  "homepage": "https://alecperkins.net/defaulted",
   "keywords": [],
   "type": "commonjs",
   "main": "./index.cjs",

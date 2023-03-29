@@ -1,24 +1,24 @@
 
-# typed-conf
+# defaulted
 
-[![npm package](https://img.shields.io/npm/v/typed-conf)](https://www.npmjs.com/package/typed-conf) [![typescript](https://img.shields.io/npm/types/typed-conf)](https://github.com/alecperkins/typed-conf) [![MIT license](https://img.shields.io/npm/l/typed-conf)](https://github.com/alecperkins/typed-conf/blob/main/LICENSE) [![test status](https://github.com/alecperkins/typed-conf/actions/workflows/test.yml/badge.svg)](https://github.com/alecperkins/typed-conf/actions/workflows/test.yml)
+[![npm package](https://img.shields.io/npm/v/defaulted)](https://www.npmjs.com/package/defaulted) [![typescript](https://img.shields.io/npm/types/defaulted)](https://github.com/alecperkins/defaulted) [![MIT license](https://img.shields.io/npm/l/defaulted)](https://github.com/alecperkins/defaulted/blob/main/LICENSE) [![test status](https://github.com/alecperkins/defaulted/actions/workflows/test.yml/badge.svg)](https://github.com/alecperkins/defaulted/actions/workflows/test.yml)
 
 
 
 ## Installation
 
-`npm install typed-conf`
+`npm install defaulted`
 
 and include as a JavaScript or TypeScript module (types included):
 
 ```typescript
-import conf from 'typed-conf';
+import defaulted from 'defaulted';
 ```
 
 …or a CommonJS module:
 
 ```javascript
-const conf = require('typed-conf');
+const defaulted = require('defaulted');
 ```
 
 
@@ -27,7 +27,7 @@ const conf = require('typed-conf');
 
 
 ```javascript
-> conf()
+> defaulted()
 
 ```
 

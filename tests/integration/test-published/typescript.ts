@@ -1,3 +1,3 @@
-import conf from "typed-conf";
+import conf from "defaulted";
 
 conf();

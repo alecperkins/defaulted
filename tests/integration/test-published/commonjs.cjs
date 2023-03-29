@@ -1,4 +1,4 @@
 
-const conf = require("typed-conf");
+const conf = require("defaulted");
 
 conf();

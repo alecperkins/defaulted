@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "pretest-published": "npm install --no-save typed-conf@latest",
+    "pretest-published": "npm install --no-save defaulted@latest",
     "test-published": "npm run pretest-published && run-p test-published:*",
     "test-published:commonjs": "node ./test-published/commonjs.cjs",
     "test-published:ecma": "node ./test-published/ecma.mjs",
