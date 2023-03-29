@@ -57,7 +57,7 @@ describe("defaulted", () => {
     test("throws when trying to set a key", async () => {
       const config = defaulted({ MYVAL: "asdf" });
       expect(config.MYVAL).toEqual("asdf");
-      expect(() => (config as any).MYVAL = "xyz").toThrow();
+      expect(() => (config as any).MYVAL = "xyz").toThrow('Cannot assign to read only property "MYVAL" on config');
     });
   });
 

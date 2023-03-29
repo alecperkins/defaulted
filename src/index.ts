@@ -72,8 +72,11 @@ const defaulted: (
       }
       throw new Error(`Cannot read unspecified property "${ String(key) }"`);
     },
+    set: (orig, key, val) => {
+      throw new Error(`Cannot assign to read only property "${ String(key) }" on config`);
+    },
   });
-  return Object.freeze(config);
+  return config;
 }
 
 export default defaulted;
