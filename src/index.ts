@@ -27,6 +27,20 @@ const conf: (
           _override = Number(override);
           break;
         }
+        case "boolean": {
+          if (override.toLowerCase() === "true") {
+            _override = true;
+          } else if (override.toLowerCase() === "false") {
+            _override = false;
+          } else if (override === "1") {
+            _override = true;
+          } else if (override === "0") {
+            _override = false;
+          } else {
+            _override = Boolean(override);
+          }
+          break;
+        }
         default: {
           _override = override;
         }

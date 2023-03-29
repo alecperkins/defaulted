@@ -35,6 +35,48 @@ describe("conf", () => {
     reset();
   });
 
+  test("doesn't convert numbers when not originally boolean", async () => {
+    const reset = overrideEnv({ MYVAL: "2" });
+    const config = conf({ MYVAL: "asdf" });
+    expect(config.MYVAL).not.toEqual(2);
+    reset();
+  });
+
+  test("doesn't convert booleans when not originally boolean", async () => {
+    const reset = overrideEnv({ MYVAL: "true" });
+    const config = conf({ MYVAL: "asdf" });
+    expect(config.MYVAL).not.toEqual(true);
+    reset();
+  });
+
+  test("casts json booleans", async () => {
+    const reset = overrideEnv({ MYVAL: "true" });
+    const config = conf({ MYVAL: false });
+    expect(config.MYVAL).toEqual(true);
+    reset();
+  });
+
+  test("casts capitalized booleans", async () => {
+    const reset = overrideEnv({ MYVAL: "True" });
+    const config = conf({ MYVAL: false });
+    expect(config.MYVAL).toEqual(true);
+    reset();
+  });
+
+  test("casts 0 booleans", async () => {
+    const reset = overrideEnv({ MYVAL: "0" });
+    const config = conf({ MYVAL: true });
+    expect(config.MYVAL).toEqual(false);
+    reset();
+  });
+
+  test("casts 1 booleans", async () => {
+    const reset = overrideEnv({ MYVAL: "1" });
+    const config = conf({ MYVAL: false });
+    expect(config.MYVAL).toEqual(true);
+    reset();
+  });
+
   test("reads from environment", async () => {
     const reset = overrideEnv({ MYVAL: "different" });
     const config = conf({ MYVAL: "testing" });
