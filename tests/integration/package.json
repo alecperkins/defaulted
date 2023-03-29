@@ -2,9 +2,9 @@
   "scripts": {
     "pretest-published": "npm install --no-save defaulted@latest",
     "test-published": "npm run pretest-published && run-p test-published:*",
-    "test-published:commonjs": "node ./test-published/commonjs.cjs",
-    "test-published:ecma": "node ./test-published/ecma.mjs",
-    "test-published:typescript": "ts-node ./test-published/typescript.ts"
+    "test-published:commonjs": "ENVIRONMENT=test node ./test-published/commonjs.cjs",
+    "test-published:ecma": "ENVIRONMENT=test node ./test-published/ecma.mjs",
+    "test-published:typescript": "ENVIRONMENT=test ts-node ./test-published/typescript.ts"
   },
   "dependencies": {
     "npm-run-all": "^4.1.5",
