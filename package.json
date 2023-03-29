@@ -29,7 +29,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "run-p build:*",
+    "build": "run-s build:*",
     "build:types": "tsc-transpile-only --declaration --emitDeclarationOnly --outDir ./build/ ./src/index.ts",
     "build:mjs": "tsc-transpile-only --module es2020 --target es2020 --outDir ./build/ ./src/index.ts && mv ./build/index.js ./build/index.mjs",
     "build:cjs": "tsc-transpile-only --module commonjs --target es2020 --outDir ./build/ ./src/index.ts && mv ./build/index.js ./build/index.cjs",
