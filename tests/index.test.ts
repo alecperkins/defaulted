@@ -21,6 +21,13 @@ describe("conf", () => {
     expect(config.MYVAL).toEqual("testing");
   });
 
+  test("doesn't read unspecified keys", async () => {
+    const config = conf({ MYVAL: "testing" });
+    expect(Object.keys(config)).toEqual(
+      expect.arrayContaining(["ENVIRONMENT", "MYVAL"])
+    );
+  });
+
   test("casts numbers", async () => {
     const reset = overrideEnv({ MYVAL: "456" });
     const config = conf({ MYVAL: 345 });

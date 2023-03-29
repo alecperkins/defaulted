@@ -11,7 +11,10 @@ const conf: (
   <T extends {}>(defaults: T, environment_overrides?: { [env: string]: Partial<T> }) => T
 ) = function conf (defaults, environment_overrides) {
 
-  const config: typeof defaults = {...defaults};
+  const config: typeof defaults = {
+    ...defaults,
+    ENVIRONMENT: process.env.ENVIRONMENT,
+  };
 
   if (environment_overrides && process.env.ENVIRONMENT) {
     Object.assign(config, environment_overrides[process.env.ENVIRONMENT] ?? {})
