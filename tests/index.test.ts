@@ -16,9 +16,23 @@ function overrideEnv (obj: { [key: string]: string }) {
 
 describe("conf", () => {
 
-  test("passes values through", async () => {
+  test("passes strings through", async () => {
     const config = conf({ MYVAL: "testing" });
     expect(config.MYVAL).toEqual("testing");
+  });
+
+  test("casts numbers", async () => {
+    const reset = overrideEnv({ MYVAL: "456" });
+    const config = conf({ MYVAL: 345 });
+    expect(config.MYVAL).toEqual(456);
+    reset();
+  });
+
+  test("casts non-numbers", async () => {
+    const reset = overrideEnv({ MYVAL: "abc" });
+    const config = conf({ MYVAL: 345 });
+    expect(config.MYVAL).toEqual(NaN);
+    reset();
   });
 
   test("reads from environment", async () => {

@@ -21,7 +21,17 @@ const conf: (
     const _key = key as keyof typeof defaults;
     const override = process.env[_key as string];
     if (typeof override === "string") {
-      (config as any)[_key] = override;
+      let _override;
+      switch (typeof defaults[_key]) {
+        case "number": {
+          _override = Number(override);
+          break;
+        }
+        default: {
+          _override = override;
+        }
+      }
+      (config as any)[_key] = _override;
     }
   });
 
