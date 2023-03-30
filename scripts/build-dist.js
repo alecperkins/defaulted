@@ -44,9 +44,9 @@ writePackageFile('LICENSE', readProjectFile('LICENSE'));
 
 let cjs_content = readBuildFile('index.cjs').toString();
 cjs_content = cjs_content.replace(`Object.defineProperty(exports, "__esModule", { value: true });`,'');
-cjs_content = cjs_content.replace(`exports.default = conf;`,`
-module.exports = conf;
-module.exports.default = conf;
+cjs_content = cjs_content.replace(`exports.default = defaulted;`,`
+module.exports = defaulted;
+module.exports.default = defaulted;
 Object.defineProperty(module.exports, "__esModule", { value: true });
 `);
 
