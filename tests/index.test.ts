@@ -59,6 +59,19 @@ describe("defaulted", () => {
       expect(config.MYVAL).toEqual("asdf");
       expect(() => (config as any).MYVAL = "xyz").toThrow('Cannot assign to read only property "MYVAL" on config');
     });
+
+    test("always provides ENVIRONMENT", async () => {
+      overrideEnv({ ENVIRONMENT: "someenv" });
+      const config = defaulted({});
+      expect(config.ENVIRONMENT).toEqual("someenv");
+      expect(Object.keys(config)).toEqual(["ENVIRONMENT"]);
+    });
+
+    test("always provides ENVIRONMENT if not defined", async () => {
+      const config = defaulted({});
+      expect(config.ENVIRONMENT).toEqual(undefined);
+      expect(Object.keys(config)).toEqual(["ENVIRONMENT"]);
+    });
   });
 
   describe("strings", () => {

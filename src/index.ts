@@ -4,19 +4,19 @@
  * 
  * 
  * @param defaults - The default configuration values.
- * @param environment_overrides - set or unset defaults for an explicit process.env.ENVIRONMENT
+ * @param overrides - set or unset defaults for an explicit process.env.ENVIRONMENT
  * @returns the config combined from defaults, overrides and process.env
  */
 const defaulted: (
-  <T extends {}>(defaults: T, environment_overrides?: { [env: string]: Partial<T> }) => { readonly [key in keyof T]: T[key] }
-) = function defaulted (defaults, environment_overrides) {
+  <T extends {}>(defaults: T, overrides?: { [env: string]: Partial<T> }) => { readonly [key in keyof T]: T[key] } & { ENVIRONMENT: string | undefined }
+) = function defaulted (defaults, overrides) {
 
   const actual_config: typeof defaults = {
     ...defaults,
   };
 
-  if (environment_overrides && process.env.ENVIRONMENT) {
-    Object.assign(actual_config, environment_overrides[process.env.ENVIRONMENT] ?? {})
+  if (overrides && process.env.ENVIRONMENT) {
+    Object.assign(actual_config, overrides[process.env.ENVIRONMENT] ?? {})
   }
 
   Object.keys(actual_config).forEach((key) => {
@@ -76,7 +76,7 @@ const defaulted: (
       throw new Error(`Cannot assign to read only property "${ String(key) }" on config`);
     },
   });
-  return config;
+  return config as any;
 }
 
 export default defaulted;
