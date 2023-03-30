@@ -28,35 +28,59 @@ const defaulted = require("defaulted");
 
 ## Usage
 
-```javascript
-const config = defaulted(
-  {
-    FEATURE_ENABLED: true,
-    SERVICE_URL: "https://sandbox-api.example.com",
-  },
-  {
-    test: {
-      FEATURE_ENABLED: false,
-    },
-    prod: {
-      FEATURE_ENABLED: false,
-      SERVICE_URL: "https://api.example.com",
-    },
-  }
-);
-```
-
-`defaulted()` takes one or two arguments: the default values to use if the matching variables are not defined in the environment, and an optional mapping of values to overrides. The defaults act like a schema. Only keys present in the defaults will be extracted from the environment, and they will be cast to a type matching the type of the default value.
-
-Given this setup:
+Set up centralized config with defaults that may be overridden by environment variables. The defaults act like a schema. Only keys present in the defaults will be extracted from the environment, and they will be cast to a type matching the type of the default value.
 
 ```javascript
 const config = defaulted({
+  DATABASE_URL: "postgres://localhost:5432/db",
+  NEW_FEATURE_ENABLED: true,
+  SERVICE_URL: "https://sandbox-api.example.com",
+});
+```
+
+Read config values:
+
+```javascript
+const client = new DBClient(config.DATABASE_URL);
+
+if (config.NEW_FEATURE_ENABLED) {
+  console.log("Enabled!");
+} else {
+  console.log("Not Enabled!");
+}
+
+const response = await fetch(config.SERVICE_URL);
+```
+
+Override values via env:
+
+```javascript
+> NEW_FEATURE_ENABLED=false node main.js
+Not Enabled!
+```
+
+Trying to access or set values not defined will throw:
+
+```javascript
+if (config.OTHER_FEATURE) { // <-- Throws!
+config.NEW_FEATURE_ENABLED = false // <-- Throws!
+```
+
+### Environment Overrides
+
+`defaulted()` takes one or two arguments: the default values to use if the matching variables are not defined in the environment, and an optional mapping of overrides. These overrides will be selected based on value of the `ENVIRONMENT` variable.
+
+For another example, given this setup:
+
+```javascript
+const config = defaulted({
+  DATABASE_URL: "postgres://localhost:5432/db",
   MOCK_EMAIL: true,
   SMTP_HOST: "smtp.example.com",
   SMTP_PORT: 587,
 }, {
   prod: {
+    DATABASE_URL: undefined,
     MOCK_EMAIL: false,
   },
   test: {
@@ -66,18 +90,7 @@ const config = defaulted({
 });
 ```
 
-You can then access the config values like a plain object. For example:
-
-```javascript
-function sendEmail (…) {
-  if (config.MOCK_EMAIL) {
-    return MOCK_EMAIL_RESPONSE;
-  }
-  return EmailService.send(…);
-}
-```
-
-In this example, if you _do_ want to send email from your local machine, you can disable the mocking just for that "deployment" by starting the server with something like `MOCK_EMAIL=false npm start`. Conversely, a deployment with `ENVIRONMENT=prod` will not mock email by default unless the overridden by the environment.
+If you _do_ want to send email from your local machine, you can disable the mocking just for that "deployment" by starting the server with something like `MOCK_EMAIL=false npm start`. Conversely, a deployment with `ENVIRONMENT=prod` will not mock email by default unless the overridden by the environment. The `prod` environment also requires the `DATABASE_URL` be defined, while local dev doesn't need any additional configuration out of the box.
 
 
 ### Validation
@@ -105,7 +118,7 @@ Booleans must be specified in the environment using the words `"true"` or `"fals
 
 ### Secrets
 
-`defaulted` works well for secrets and allows you to provide non-sensitive defaults locally but set explicitly undefined values for production, guarding against deploying a new instance of an app without mandatory config. There also is no limit to the number of config objects that can be created. This allows for separating secret values from the regular config so they are clearly sensitive and it's easy to trace which code uses them.
+`defaulted` works well for secrets and allows you to provide non-sensitive defaults locally but set explicitly undefined values for production, guarding against deploying a new instance of an app without mandatory config. A useful way to do this is create an explicit `secrets` config. This allows for separating secret values from the regular config so they are clearly sensitive and it's easy to trace which code uses them.
 
 For values that are not mocked by default, but mocked in tests, you can use the per-environment defaults to have live values locally and mock values in test.
 
@@ -145,40 +158,35 @@ export { secrets };
 
 Name the `ENVIRONMENTS` by their primary functional difference, rather than a specific stage, app, or instance names. Some suggestions:
 - `"prod"` is for live production instances, ones where it _matters_ when things go wrong
-- `"dev"` is any non-production deployment, be it Staging, QA, UAT, SIT, or any other name or acronym, potentially even locally on a developer machine
-  - There could be several deployments or stages in a pipeline that all use `"dev"`
+- `"dev"` is any non-production deployment, be it Staging, QA, UAT, SIT, or any other name or acronym, potentially even locally on a developer machine (there could be any number of deployments or stages in a pipeline using this `ENVIRONMENT`)
 - `"test"` is any CI or similar test context that has needs specific changes for automation or instrumentation
-- `"local"` is a good alternative to `"dev"` when perhaps certain infrastructure pieces like queues need to be simulated for convenience
+- `"local"` is a good alternative to `"dev"` when perhaps certain infrastructure pieces like queues need to be simulated
 
-Often you won’t need explicit local defaults, so if there are more than three, that is a hint the config needs a simplification pass. Likewise if each environment needs to set a lot of variables, reconsider how different the environments need to be from each other.
+If there are more than a few `ENVIRONMENT`s, that’s a hint the config needs a simplification pass. Likewise if each environment needs to set a lot of variables, reconsider how different the environments need to be from each other.
 
 
 #### 12 Factor Config
 
 > I thought the 12 Factor App said to store [config](https://12factor.net/config) in the environment.
 
-It does, and it’s right! But taken to a dogmatic extreme, putting everything entirely into the environment makes consistency difficult and the app becomes _too_ sensitive to its deployed context. In practice, there usually are distinct categories of environments. Apps should own their expectations of configuration while allowing for explicit overrides on a per-deployment basis. `defaulted` seeks a balance between the purity of `env`-based config with the practicality of consistent groupings, and centralizes the definition with declarative defaults. Ideally, an app requires zero environment variables to be run locally for development. The config still ultimately lives in the environment, but `defaulted` can simplify establishment of the default values.
-
-For example, if you add a new set of features behind a flag purely in the environment, you have to update every context the app is deployed in to test it out—even if it's a benign-enough feature that it should be available in staging by default. Also, you want other developers to be seeing the latest config of the app while working on it, and know if their own changes are going to conflict. Some configs like feature flags are closely coupled to the code, and the most appropriate default value can change depending on the state of the code, so that default should be declared and versioned alongside it.
-
-In another example, certain external services may not have sandbox versions, or are risky to run in non-prod contexts. Or there are sandbox versions but they are not accessible for local dev so local needs to default to mocks — but those services must default to not-mocked in prod. Or you _never_ want to send real emails or texts in test contexts and blow your SMS budget. `defaulted` allows you explicitly set configs for certain contexts, and then override on a per-deploy basis. It also provides a layer of validation, to prevent the app from running with required config.
+It does, and it’s right! `defaulted` is more precisely a way to manage the _defaults_, and ensure consistency. It seeks a balance between the purity of env-based config with the practicality of consistent groupings with centralized declarative defaults. In practice there usually are at least two classes of config. External tools can help manage this, but apps should own their expectations of configuration while allowing for explicit overrides on a per-deployment basis.
 
 
 #### Why not NODE_ENV?
 
-> Why not NODE_ENV?
-
-Apps and tooling have different interpretations of `NODE_ENV`, some only allowing specific values. The consensus seems to be it refers to a _build_ or _performance_ configuration rather than a precise deployment context. When `NODE_ENV=production`, bundles are minified, debug instrumentation disabled, etc. Those changes are important for production, but all those are also valuable for any non-prod environment where you want to test code that is as close to the actual prod version as possible. They’re also necessary to practice stateless builds that can be promoted to production. Besides, `NODE_ENV` is node-specific, whereas `ENVIRONMENT` does not imply a particular technology, so other services can respond to it without confusion.
+Apps and tooling have different interpretations of `NODE_ENV`, some only allowing specific values. The consensus seems to be it refers to a build-time _performance_ configuration rather than a deployment context. When `NODE_ENV=production`, bundles are minified, debug instrumentation disabled, dev dependencies omitted etc. Those changes are important for production, but they’re also valuable for any non-prod environment where you want to test code that is as close to the actual prod version as possible. They’re also necessary to practice stateless builds that can be promoted to production. Besides, `NODE_ENV` is node-specific, whereas `ENVIRONMENT` does not imply a particular technology, so other services can respond to it without confusion.
 
 
 #### Nesting or lists
 
-Storing more complex values in the env beyond a singular token is not recommended. However, you are free to use regular strings for that and parse them yourself. `defaulted` doesn’t support validating such values because the schemas quickly become complicated or app-/technology-specific, and are better handled by the app itself.
+Storing more complex values in the env beyond a singular token is not recommended. However, you are free to use regular strings for that and parse them yourself. `defaulted` doesn’t support validating such values because the schemas quickly become complicated or app/technology-specific, and are better handled by the app itself if they are absolutely necessary. Odds are they are better suited as data rather than config.
 
 
 #### Key names
 
-Any valid object property name is allowed for defaults. This includes mixed cases, spaces, and non-alphanumeric characters. That said, spaces are disallowed in most [POSIX environments](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html), and some even disallow lowercase. Others are case-insensitive. Even if there is a default defined, the app may not be able to read `some key` from the environment. To maximize compatibility, and reinforce the notion that these values should be constant for the life of the process, use uppercase with underscores, eg `FEATURE_FLAG`.
+To maximize compatibility, and reinforce the notion that these values should be constant for the life of the process, use uppercase with underscores, eg `FEATURE_FLAG`.
+
+Any valid object property name is allowed for defaults. This includes mixed cases, spaces, and non-alphanumeric characters. That said, spaces are disallowed in most [POSIX environments](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html), and some even disallow lowercase. Others are case-insensitive. Even if there is a default defined, the app may not be able to read `some key` from the environment.
 
 
 
