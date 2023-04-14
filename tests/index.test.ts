@@ -274,6 +274,115 @@ describe("defaulted", () => {
         } as any
       })).toThrow('Unexpected keys in overrides: "OTHER_VAL","SOME_VAL"');
     });
+  });
+
+  describe("secrets", () => {
+    test("passes through values from env", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ] as const);
+      expect(secrets.MY_SECRET).toEqual("secret");
+      expect(Object.keys(secrets)).toEqual(["MY_SECRET"]);
+    });
+
+    test("does not cast values", async () => {
+      overrideEnv({
+        MY_SECRET: "123",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ]);
+      expect(typeof secrets.MY_SECRET).toEqual("string");
+    });
+
+    test("applies overrides if specified", async () => {
+      overrideEnv({
+        ENVIRONMENT: "local",
+        MY_OTHER_SECRET: "fake",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+        "MY_OTHER_SECRET",
+      ], {
+        local: {
+          MY_SECRET: "overridden",
+        },
+        test: {},
+      });
+      expect(secrets.MY_SECRET).toEqual("overridden");
+      expect(secrets.MY_OTHER_SECRET).toEqual("fake");
+    });
+
+    test("requires secrets be defined in env if not an env override", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      expect(() => {
+        defaulted.secrets([
+          "MY_SECRET",
+          "MY_OTHER_SECRET",
+        ], {
+          local: {
+            MY_SECRET: "asdf",
+          },
+          test: {},
+        });
+      }).toThrow('Required secret keys not present in env: "MY_SECRET","MY_OTHER_SECRET"');
+    });
+
+    test("allows empty strings", async () => {
+      overrideEnv({
+        MY_SECRET: "",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ]);
+      expect(secrets.MY_SECRET).toEqual("");
+    });
+
+    test("throws if an override specifies a key not in the key list", async () => {
+      overrideEnv({
+        ENVIRONMENT: "local",
+      });
+      expect(() => {
+        defaulted.secrets([
+          "MY_SECRET",
+        ] as const, {
+          local: {
+            MY_SECRET: "asdf",
+            SOME_SECRET: "",
+          } as any,
+          test: {
+            OTHER_SECRET: "asdf",
+          } as any,
+        });
+      }).toThrow('Unexpected secret keys in overrides: "SOME_SECRET","OTHER_SECRET"');
+    });
+
+    test("throws when trying to set a key", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect(secrets.MY_SECRET).toEqual("secret");
+      expect(() => (secrets as any).MY_SECRET = "xyz").toThrow('Cannot assign to read only property on secrets: "MY_SECRET"');
+    });
+
+    test("throws when accessing an undefined key", async () => {
+      const secrets = defaulted.secrets([] as const);
+      expect(() => (secrets as any).SECRET).toThrow('Cannot read unspecified property on secrets: "SECRET"');
+    });
+
+    test("does not include ENVIRONMENT by default", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      const secrets = defaulted.secrets([] as const);
+      expect(() => (secrets as any).ENVIRONMENT).toThrow('Cannot read unspecified property on secrets: "ENVIRONMENT"');
     });
   });
 

@@ -116,43 +116,86 @@ Note that `process.env` provides strings only, so the casting behavior of `Numbe
 Booleans must be specified in the environment using the words `"true"` or `"false"`, in any capitalization, or the numbers `"1"` or `"0"`. Any other value will throw if the default is expecting a boolean. Note that, like with numbers, this different than `Boolean()` casting since `process.env` only provides strings.
 
 
-### Secrets
+### `defaulted.secrets()`
 
-`defaulted` works well for secrets and allows you to provide non-sensitive defaults locally but set explicitly undefined values for production, guarding against deploying a new instance of an app without mandatory config. A useful way to do this is create an explicit `secrets` config. This allows for separating secret values from the regular config so they are clearly sensitive and it's easy to trace which code uses them.
-
-For values that are not mocked by default, but mocked in tests, you can use the per-environment defaults to have live values locally and mock values in test.
-
-For example, this config sets `SOME_SERVICE_API_KEY` to an insensitive default for an external service’s sandbox environment while requiring the production deployment context to define it. It also requires that staging and production environments define a `DATABASE_URL`, and gives tests explicitly mocked secrets.
+`defaulted` works well for secrets and allows you to provide non-sensitive defaults locally, but set explicitly undefined values for production. This guards against deploying a new instance of an app without mandatory secret config. This is possible with the regular `defaulted`, but gets repetitive. The `defaulted.secrets(…)` function makes this easier by inverting the approach to merging the defaults.
 
 ```javascript
-const config = defaulted(…);
-
-const secrets = defaulted({
-  DATABASE_URL: "postgres://localhost:5432/db",
-  SMTP_USERNAME: "",
-  SMTP_PASSWORD: "",
-  SOME_SERVICE_API_KEY: "sandbox12345",
-}, {
+const secrets = defaulted.secrets([
+  "SESSION_SECRET",
+  "SOME_API_KEY",
+], {
+  local: {
+    SESSION_SECRET: "dev-session-secret",
+  },
   test: {
-    SMTP_USERNAME: "mockuser",
-    SMTP_PASSWORD: "mockpass",
+    SESSION_SECRET: "test-session-secret",
+    SOME_API_KEY: "mocked",
+  },
+});
+```
+
+When calling `defaulted.secrets`, specified keys _do not_ have default values unless defined in the environment overrides, and are required to be provided by env vars. The function will throw if they are not found in `process.env`. This way, local development or tests can have out-of-the-box unsensitive defaults if available, but production _must_ provide the secrets via env variables.
+
+Like regular `defaulted`-based configs, accessing keys not specified in the initial list, trying to set a key, or trying to override an unspecified key will throw. These operations will also fail type checking but require the list of keys being marked `as const` for thorough strictness.
+
+```typescript
+const secrets = defaulted.secrets([
+  "SESSION_SECRET",
+  "SOME_API_KEY",
+] as const);
+```
+
+Note that secret values are passed through as strings. If for some reason you do need Number or Boolean secrets, you can use the regular `defaulted` call and set the env overrides to `undefined` to make them mandatory:
+
+```javascript
+const secrets = defaulted({
+  SECRET_NUMBER: 4,
+}, {
+  prod: {
+    SECRET_NUMBER: undefined,
+  },
+});
+```
+The above will throw in `ENVIRONMENT=prod` if `SECRET_NUMBER` is not in the env.
+
+
+### FAQ & Best Practices
+
+#### Secrets
+
+A useful way to handle secrets is create an explicit secrets config. This separates secret values from the regular config so they are clearly sensitive and it's easy to trace which code uses them.
+
+```javascript
+const config = defaulted({
+  SOME_API_URL: "https://sandbox-api.example.com",
+}, {
+  prod: {
+    SOME_API_URL: "https://api.example.com",
+  },
+});
+
+const secrets = defaulted.secrets([
+  "DATABASE_URL",
+  "SOME_API_KEY",
+], {
+  local: {
+    DATABASE_URL: "postgres://localhost:5432/db",
+    SOME_API_KEY: "sandbox12345",
+  },
+  test: {
+    SOME_API_KEY: "mocked",
   },
   stag: {
-    DATABASE_URL: undefined,
+    SOME_API_KEY: "sandbox12345",
   },
   prod: {
-    DATABASE_URL: undefined,
-    SOME_SERVICE_API_KEY: undefined,
   },
 });
 
 export default config;
 export { secrets };
 ```
-
-
-### FAQ & Best Practices
-
 
 #### ENVIRONMENT names
 
