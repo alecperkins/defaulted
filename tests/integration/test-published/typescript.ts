@@ -13,9 +13,18 @@ const config = defaulted({
   },
 });
 
+const secrets = defaulted.secrets([
+  "API_KEY",
+], {
+  local: {
+    API_KEY: "dev_key",
+  },
+});
+
 if (
   config.MY_HOST !== "example.com"
   || config.PORT !== 8080
+  || secrets.API_KEY !== "mock_key"
 ) {
   process.exit(1);
 }
