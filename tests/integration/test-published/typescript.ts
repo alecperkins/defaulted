@@ -15,7 +15,8 @@ const config = defaulted({
 
 const secrets = defaulted.secrets([
   "API_KEY",
-], {
+  "OTHER_KEY",
+] as const, {
   local: {
     API_KEY: "dev_key",
   },

@@ -307,7 +307,7 @@ describe("defaulted", () => {
       const secrets = defaulted.secrets([
         "MY_SECRET",
         "MY_OTHER_SECRET",
-      ], {
+      ] as const, {
         local: {
           MY_SECRET: "overridden",
         },
@@ -325,7 +325,7 @@ describe("defaulted", () => {
         defaulted.secrets([
           "MY_SECRET",
           "MY_OTHER_SECRET",
-        ], {
+        ] as const, {
           local: {
             MY_SECRET: "asdf",
           },

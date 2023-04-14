@@ -4,7 +4,7 @@
     "test-published": "npm run pretest-published && run-p test-published:*",
     "test-published:commonjs": "ENVIRONMENT=test API_KEY=mock_key node ./test-published/commonjs.cjs",
     "test-published:ecma": "ENVIRONMENT=test API_KEY=mock_key node ./test-published/ecma.mjs",
-    "test-published:typescript": "ENVIRONMENT=test API_KEY=mock_key ts-node ./test-published/typescript.ts"
+    "test-published:typescript": "ENVIRONMENT=test API_KEY=mock_key OTHER_KEY=x ts-node ./test-published/typescript.ts"
   },
   "dependencies": {
     "npm-run-all": "^4.1.5",

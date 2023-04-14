@@ -114,7 +114,7 @@ const defaulted: (
  */
 function secrets <T extends ReadonlyArray<string>> (
   keys: T,
-  overrides?: { [env: string]: { [key in T[number]]: string } }
+  overrides?: { [env: string]: { [key in T[number]]?: string } }
 ): { readonly [key in T[number]]: string } {
   const actual_secrets = {} as {
     [key in T[number]]: string;
