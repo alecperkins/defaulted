@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-alpha.1](https://github.com/alecperkins/defaulted/compare/v1.0.0-alpha...v1.0.0-alpha.1) (2023-04-14)
+
+
+### Features
+
+* defaulted.secrets for easier mandatory secrets ([a7dc5f3](https://github.com/alecperkins/defaulted/commit/a7dc5f32338090d6c56fc8c832cf98cafd5468ce))
+* Stricter validation of keys ([092bcca](https://github.com/alecperkins/defaulted/commit/092bcca8200d8ed11a670eb64550521c21fef7a6))
+
+
+### Bug Fixes
+
+* Ensure ENVIRONMENT is always returned ([9842ada](https://github.com/alecperkins/defaulted/commit/9842ada4ee74bee4d69709eea94b321350f79ab6))
+
+
+### Miscellaneous Chores
+
+* release ([72bf346](https://github.com/alecperkins/defaulted/commit/72bf346d915f6ff61e992bd5265e29bf11a20890))
+
 ## 1.0.0-alpha (2023-03-30)
 
 
