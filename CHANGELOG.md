@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/alecperkins/defaulted/compare/v1.0.0...v1.0.1) (2023-04-14)
+
+
+### Bug Fixes
+
+* Allow secrets overrides to omit keys ([b3cf800](https://github.com/alecperkins/defaulted/commit/b3cf800b3673924c1f7adc023acb3282fbc5f572))
+
 ## [1.0.0](https://github.com/alecperkins/defaulted/compare/v1.0.0-alpha.2...v1.0.0) (2023-04-14)
 
 
