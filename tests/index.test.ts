@@ -46,18 +46,19 @@ describe("defaulted", () => {
       expect(Object.keys(config)).toEqual(
         expect.arrayContaining(["ENVIRONMENT", "MYVAL"])
       );
-      expect(() => (config as any).UnreadVal).toThrow('Cannot read unspecified property "UnreadVal"');
+      expect(() => (config as any).UnreadVal).toThrow('Cannot read unspecified property on config: "UnreadVal"');
     });
 
     test("throws on access of unspecified key", async () => {
       const config = defaulted({ MYVAL: "asdf" });
-      expect(() => (config as any).OTHERVAL).toThrow('Cannot read unspecified property "OTHERVAL"');
+      expect(() => (config as any).OTHERVAL).toThrow('Cannot read unspecified property on config: "OTHERVAL"');
     });
 
     test("throws when trying to set a key", async () => {
       const config = defaulted({ MYVAL: "asdf" });
       expect(config.MYVAL).toEqual("asdf");
-      expect(() => (config as any).MYVAL = "xyz").toThrow('Cannot assign to read only property "MYVAL" on config');
+      expect(() => (config as any).MYVAL = "xyz").toThrow('Cannot assign to read only property on config: "MYVAL"');
+      expect(() => (config as any).OTHERVAL = "xyz").toThrow('Cannot assign to read only property on config: "OTHERVAL"');
     });
 
     test("always provides ENVIRONMENT", async () => {
@@ -239,7 +240,40 @@ describe("defaulted", () => {
         test: {
           MYVAL: undefined,
         },
-      })).toThrow('Required key not present in env: "MYVAL"');
+      })).toThrow('Required keys not present in env: "MYVAL"');
+    });
+
+    test("tests all values so it can throw once", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      expect(() => defaulted({
+        MYVAL: "testing",
+        OTHERVAL: "fake",
+      }, {
+        test: {
+          MYVAL: undefined,
+          OTHERVAL: undefined,
+        },
+      })).toThrow('Required keys not present in env: "MYVAL","OTHERVAL"');
+    });
+
+    test("throws if an override specifies a key not in the defaults", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      expect(() => defaulted({
+        MYVAL: "testing",
+      }, {
+        test: {
+          OTHER_VAL: "",
+          MYVAL: undefined,
+        } as any, // Typescript will normally prevent this scenario
+        prod: {
+          SOME_VAL: "",
+        } as any
+      })).toThrow('Unexpected keys in overrides: "OTHER_VAL","SOME_VAL"');
+    });
     });
   });
 

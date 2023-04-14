@@ -15,6 +15,19 @@ const defaulted: (
     ...defaults,
   };
 
+  const expected_keys = new Set(Object.keys(actual_config));
+  const unexpected_keys = new Set();
+  const missing_keys = new Set();
+  if (overrides) {
+    Object.values(overrides).forEach(override => {
+      Object.keys(override).forEach(key => {
+        if (!expected_keys.has(key)) {
+          unexpected_keys.add(key);
+        }
+      });
+    });
+  }
+
   if (overrides && process.env.ENVIRONMENT) {
     Object.assign(actual_config, overrides[process.env.ENVIRONMENT] ?? {})
   }
@@ -56,9 +69,16 @@ const defaulted: (
       (actual_config as any)[_key] = _override;
     }
     if (typeof actual_config[key] === "undefined") {
-      throw new Error(`Required key not present in env: "${ key }"`);
+      missing_keys.add(key);
     }
   });
+  
+  if (unexpected_keys.size > 0) {
+    throw new Error(`Unexpected keys in overrides: "${ Array.from(unexpected_keys).join('","') }"`);
+  }
+  if (missing_keys.size > 0) {
+    throw new Error(`Required keys not present in env: "${ Array.from(missing_keys).join('","') }"`);
+  }
 
   // Set this last so it doesn't get caught in validation.
   Object.assign(actual_config, {
@@ -70,10 +90,10 @@ const defaulted: (
       if ((Object as any).hasOwn(orig, key)) {
       return orig[key];
       }
-      throw new Error(`Cannot read unspecified property "${ String(key) }"`);
+      throw new Error(`Cannot read unspecified property on config: "${ String(key) }"`);
     },
     set: (orig, key, val) => {
-      throw new Error(`Cannot assign to read only property "${ String(key) }" on config`);
+      throw new Error(`Cannot assign to read only property on config: "${ String(key) }"`);
     },
   });
   return config as any;
