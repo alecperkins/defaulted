@@ -1,3 +1,4 @@
+# https://github.com/googleapis/release-please-action?tab=readme-ov-file
 name: Prepare Release
 
 on:
@@ -12,12 +13,10 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: googleapis/release-please-action@v4
         with:
           release-type: node
-          package-name: release-please-action
 
-  # https://github.com/google-github-actions/release-please-action/issues/176#issuecomment-1356244823
   build:
     permissions:
       contents: write
@@ -34,5 +33,5 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "deafulted-*.tgz"
+          file: "defaulted-*.tgz"
           tag: ${{ needs.release-please.outputs.tag_name }}
