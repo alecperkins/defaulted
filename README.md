@@ -59,7 +59,7 @@ Override values via env:
 Not Enabled!
 ```
 
-Trying to access or set values not defined will throw:
+Trying to access config keys not defined or set any will throw:
 
 ```javascript
 if (config.OTHER_FEATURE) { // <-- Throws!
@@ -90,7 +90,7 @@ const config = defaulted({
 });
 ```
 
-If you _do_ want to send email from your local machine, you can disable the mocking just for that "deployment" by starting the server with something like `MOCK_EMAIL=false npm start`. Conversely, a deployment with `ENVIRONMENT=prod` will not mock email by default unless the overridden by the environment. The `prod` environment also requires the `DATABASE_URL` be defined, while local dev doesn't need any additional configuration out of the box.
+If you _do_ want to send email from your local machine, you can disable the mocking just for that "deployment" by starting the server with something like `MOCK_EMAIL=false npm start`. Conversely, a deployment with `ENVIRONMENT=prod` will not mock email by default unless overridden by the environment. The `prod` environment also requires the `DATABASE_URL` be defined, while local dev doesn't need any additional configuration out of the box.
 
 
 ### Validation
@@ -137,7 +137,7 @@ const secrets = defaulted.secrets([
 
 When calling `defaulted.secrets`, specified keys _do not_ have default values unless defined in the environment overrides, and are required to be provided by env vars. The function will throw if they are not found in `process.env`. This way, local development or tests can have out-of-the-box unsensitive defaults if available, but production _must_ provide the secrets via env variables.
 
-Like regular `defaulted`-based configs, accessing keys not specified in the initial list, trying to set a key, or trying to override an unspecified key will throw. These operations will also fail type checking but require the list of keys being marked `as const` for thorough strictness.
+Like regular `defaulted`-based configs, accessing keys not specified in the initial list, trying to set a key, or trying to override an unspecified key will throw. These operations will also fail type checking but make sure the list of keys is marked `as const` for thorough strictness.
 
 ```typescript
 const secrets = defaulted.secrets([
@@ -197,22 +197,40 @@ export default config;
 export { secrets };
 ```
 
+With this setup, it’s easy to trace the usage of any particular config, and especially the secrets:
+
+```javascript
+import config, { secrets } from "./config";
+import APIClient from "some-api";
+
+export function getAPIClient () {
+  return new APIClient(config.SOME_API_URL, {
+    token: secrets.SOME_API_KEY,
+  });
+}
+```
+
+
 #### ENVIRONMENT names
 
 Name the `ENVIRONMENTS` by their primary functional difference, rather than a specific stage, app, or instance names. Some suggestions:
 - `"prod"` is for live production instances, ones where it _matters_ when things go wrong
 - `"dev"` is any non-production deployment, be it Staging, QA, UAT, SIT, or any other name or acronym, potentially even locally on a developer machine (there could be any number of deployments or stages in a pipeline using this `ENVIRONMENT`)
-- `"test"` is any CI or similar test context that has needs specific changes for automation or instrumentation
+- `"test"` is any CI or similar test context that needs specific changes for mocking or instrumentation
 - `"local"` is a good alternative to `"dev"` when perhaps certain infrastructure pieces like queues need to be simulated
 
 If there are more than a few `ENVIRONMENT`s, that’s a hint the config needs a simplification pass. Likewise if each environment needs to set a lot of variables, reconsider how different the environments need to be from each other.
+
+Note that different deployments can share an `ENVIRONMENT` but set different values in their specific instance. The `EVIRONMENT` is just a label that selects a set of config defaults and expectations as defined in the code.
 
 
 #### 12 Factor Config
 
 > I thought the 12 Factor App said to store [config](https://12factor.net/config) in the environment.
 
-It does, and it’s right! `defaulted` is more precisely a way to manage the _defaults_, and ensure consistency. It seeks a balance between the purity of env-based config with the practicality of consistent groupings with centralized declarative defaults. In practice there usually are at least two classes of config. External tools can help manage this, but apps should own their expectations of configuration while allowing for explicit overrides on a per-deployment basis.
+It does, and it’s right! `defaulted` is more precisely a way to manage the _defaults_, and ensure consistency. It seeks a balance between the purity of env-based config with the practicality of consistent groupings with centralized declarative defaults.
+
+In practice, unless you’re always doing it live there usually are at least two classes of config: production and non-production. External tools can help manage this, but apps should own their expectations of configuration while allowing for explicit overrides on a per-deployment basis.
 
 
 #### Why not NODE_ENV?
