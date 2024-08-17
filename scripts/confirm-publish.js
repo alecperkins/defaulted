@@ -1,7 +1,6 @@
 const target = require('../dist/package.json');
 
 (async () => {
-    const fetch = (await import('node-fetch')).default;
     const npm_endpoint = `https://registry.npmjs.com/${ target.name }`;
     const published_package = await (await fetch(npm_endpoint)).json();
     const latest_version = published_package["dist-tags"].latest;
