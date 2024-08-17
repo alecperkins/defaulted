@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/alecperkins/defaulted/compare/v1.0.1...v1.0.2) (2024-08-17)
+
+
+### Miscellaneous Chores
+
+* release ([a77e1d1](https://github.com/alecperkins/defaulted/commit/a77e1d1a267eacfbe65b366081aaadb2fc3a4d69))
+
 ## [1.0.1](https://github.com/alecperkins/defaulted/compare/v1.0.0...v1.0.1) (2023-04-14)
 
 
