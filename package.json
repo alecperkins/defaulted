@@ -1,6 +1,6 @@
 {
   "name": "defaulted",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Manage config from environment variables with sensible defaults, with typing and validation.",
   "author": "Alec Perkins <mail@alecperkins.me>",
   "license": "MIT",
