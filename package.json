@@ -1,7 +1,7 @@
 {
   "name": "defaulted",
   "version": "1.0.1",
-  "description": "Build config from environment variables and sensible defaults, with typing and validation.",
+  "description": "Manage config from environment variables with sensible defaults, with typing and validation.",
   "author": "Alec Perkins <mail@alecperkins.me>",
   "license": "MIT",
   "bugs": {
