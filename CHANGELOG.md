@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/alecperkins/defaulted/compare/v1.0.2...v1.1.0) (2025-04-05)
+
+
+### Features
+
+* Support toJSON for non-secrets ([2911012](https://github.com/alecperkins/defaulted/commit/2911012fdbf690c2f3e45039ccac2d6424e93e78)), closes [#7](https://github.com/alecperkins/defaulted/issues/7)
+
 ## [1.0.2](https://github.com/alecperkins/defaulted/compare/v1.0.1...v1.0.2) (2024-08-17)
 
 
