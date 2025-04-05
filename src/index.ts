@@ -122,7 +122,7 @@ const defaulted: (
   <T extends {}>(
     defaults: T,
     overrides?: { [env: string]: Partial<T> }
-  ) => { readonly [K in keyof T]: T[K] }
+  ) => { readonly [K in keyof T]: T[K] } & { toJSON: () => { [K in keyof T]: T[K] }}
   & { ENVIRONMENT: string | undefined }
 ) & { secrets: typeof secrets } = function defaulted (defaults, overrides = {}) {
   return _makeConfig({
