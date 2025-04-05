@@ -249,6 +249,66 @@ To maximize compatibility, and reinforce the notion that these values should be 
 
 Any valid object property name is allowed for defaults. This includes mixed cases, spaces, and non-alphanumeric characters. That said, spaces are disallowed in most [POSIX environments](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html), and some even disallow lowercase. Others are case-insensitive. Even if there is a default defined, the app may not be able to read `some key` from the environment.
 
+#### Client-side
+
+`defaulted` does not work in the browser. It requires a `process.env` global to read from. This avoids shipping all the dev and test configs in a prod .js bundle, or making a stateful build that needs to be recompiled for every ENVIRONMENT and obviating the whole point of this library.
+
+To facilitate passing the config as a whole to the client, a worker or a subprocess, or some other context that needs JSON-serializable values, non-secret configs support `toJSON`.
+
+For example, given this config:
+
+```javascript
+const config = defaulted({
+  FEATURE_ENABLED: true
+}, {
+  prod: {
+    FEATURE_ENABLED: false
+  }
+});
+```
+
+…and this template…
+
+```javascript
+const myPage = _.template(`
+<h1>{{ context_val }}</h1>
+<script type="text/json" id="config">
+  {{config}}
+</script>
+<script>
+  const config = JSON.parse(document.getElementById("config").innerHTML);
+  if (config.FEATURE_ENABLED) {
+    console.log('feature!')
+  } else {
+    console.log('no feature);
+  }
+</script>
+`);
+
+const markup = myPage({
+  context_val: "abc",
+  config: JSON.stringify(config),
+});
+```
+
+…this markup will be produced when `ENVIRONMENT=prod`:
+
+```html
+<h1>abc</h1>
+<script type="text/json" id="config">
+  {"FEATURE_ENABLED":false}
+</script>
+<script>
+  const config = JSON.parse(document.getElementById("config").innerHTML);
+  if (config.FEATURE_ENABLED) {
+    console.log('feature!')
+  } else {
+    console.log('no feature);
+  }
+</script>
+```
+
+Note that a config defined through `secrets()` will NOT allow itself to be serialized to JSON directly. You must copy each value out individually into a new object for serialization, if for some reason you need to pass secrets around in JSON.
 
 
 ## Author
