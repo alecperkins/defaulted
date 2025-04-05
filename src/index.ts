@@ -75,7 +75,7 @@ function _makeConfig <T extends {}> (args: {
       missing_keys.add(key);
     }
   });
-  
+
   if (unexpected_keys.size > 0) {
     throw new Error(`Unexpected ${ is_secret ? "secret " : "" }keys in overrides: "${ Array.from(unexpected_keys).join('","') }"`);
   }
@@ -92,6 +92,12 @@ function _makeConfig <T extends {}> (args: {
 
   const config = new Proxy(actual_config, {
     get: (orig, key) => {
+      if (key === 'toJSON') {
+        if (is_secret) {
+          throw new Error('Cannot serialize secrets to JSON directly. If you do mean to serialize secrets, reassign them individually into a new object.');
+        }
+        return Object.assign({}, actual_config);
+      }
       if ((Object as any).hasOwn(orig, key)) {
       return orig[key];
       }
@@ -107,7 +113,7 @@ function _makeConfig <T extends {}> (args: {
 /**
  * Creates a typed object for configuration, requiring the definition of
  * defaults and allowing for per-environment values and overrides via process.env.
- * 
+ *
  * @param defaults - The default configuration values.
  * @param overrides? - set or unset defaults for an explicit process.env.ENVIRONMENT
  * @returns the config combined from defaults, overrides and process.env
@@ -131,13 +137,13 @@ const defaulted: (
 /**
  * Creates a typed object for secret configuration, listing mandatory
  * keys the env must define, and providing optional per-ENVIRONMENT defaults.
- * 
+ *
  * @remarks
  * Make sure to use `as const` for stricter type checking.
  * ```typescript
  * const secrets = defaulted.secrets(["KEY1", "KEY2"] as const);
  * ```
- * 
+ *
  * @param keys - An array of keys for secret values in the environment.
  * @param overrides - defaults for an explicit process.env.ENVIRONMENT
  * @returns the config combined from defaults, overrides and process.env

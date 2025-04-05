@@ -93,7 +93,7 @@ describe("defaulted", () => {
       expect(config.MYVAL).toEqual("");
     });
   });
-  
+
   describe("numbers", () => {
     test("casts numbers", async () => {
       overrideEnv({ MYVAL: "456" });
@@ -118,7 +118,7 @@ describe("defaulted", () => {
       const config = defaulted({ MYVAL: 345 });
       expect(config.MYVAL).toEqual(Infinity);
     });
-  
+
     test("throws for alpha strings", async () => {
       overrideEnv({ MYVAL: "abc" });
       expect(() => defaulted({ MYVAL: 345 })).toThrow('Cannot cast to number from "abc"');
@@ -159,35 +159,35 @@ describe("defaulted", () => {
       expect(config.MYVAL).not.toEqual(true);
 
     });
-  
+
     test("casts json booleans", async () => {
       overrideEnv({ MYVAL: "true" });
       const config = defaulted({ MYVAL: false });
       expect(config.MYVAL).toEqual(true);
 
     });
-  
+
     test("casts capitalized booleans", async () => {
       overrideEnv({ MYVAL: "True" });
       const config = defaulted({ MYVAL: false });
       expect(config.MYVAL).toEqual(true);
 
     });
-  
+
     test("casts 0 booleans", async () => {
       overrideEnv({ MYVAL: "0" });
       const config = defaulted({ MYVAL: true });
       expect(config.MYVAL).toEqual(false);
 
     });
-  
+
     test("casts 1 booleans", async () => {
       overrideEnv({ MYVAL: "1" });
       const config = defaulted({ MYVAL: false });
       expect(config.MYVAL).toEqual(true);
 
     });
-  
+
     test("throws for non-booleans", async () => {
       overrideEnv({ MYVAL: "yes" }); // Try "yes" because some languages treat these as booleans
       expect(() => defaulted({ MYVAL: false })).toThrow('Cannot cast to boolean from "yes"');
@@ -215,7 +215,7 @@ describe("defaulted", () => {
       });
       expect(config.MYVAL).toEqual("different");
     });
-  
+
     test("switches defaults on ENVIRONMENT", async () => {
       overrideEnv({
         ENVIRONMENT: "test",
@@ -273,6 +273,29 @@ describe("defaulted", () => {
           SOME_VAL: "",
         } as any
       })).toThrow('Unexpected keys in overrides: "OTHER_VAL","SOME_VAL"');
+    });
+  });
+
+  describe("toJSON", () => {
+    test("serializes operative values", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+        ABC: 3,
+      });
+      const conf = defaulted({
+        MYVAL: false,
+        XYZ: 'xyz',
+        ABC: 1,
+      }, {
+        local: {
+          MYVAL: true,
+          XYZ: 'abc',
+        },
+        test: {
+          XYZ: 'XYZ',
+        },
+      });
+      expect(JSON.stringify(conf)).toEqual(`{"MYVAL":false,"XYZ":"XYZ","ABC":3,"ENVIRONMENT":"test"}`);
     });
   });
 
@@ -383,6 +406,17 @@ describe("defaulted", () => {
       });
       const secrets = defaulted.secrets([] as const);
       expect(() => (secrets as any).ENVIRONMENT).toThrow('Cannot read unspecified property on secrets: "ENVIRONMENT"');
+    });
+
+    test("throws when trying to serialize to json", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ] as const);
+      expect(() => JSON.stringify(secrets)).toThrow('Cannot serialize secrets to JSON directly');
     });
   });
 
