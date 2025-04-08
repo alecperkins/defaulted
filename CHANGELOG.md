@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/alecperkins/defaulted/compare/v1.1.0...v1.1.1) (2025-04-08)
+
+
+### Bug Fixes
+
+* toJSON serialization ([6d5521f](https://github.com/alecperkins/defaulted/commit/6d5521fc0d7055837aa4bc544cfac85e24bcc2bc))
+
 ## [1.1.0](https://github.com/alecperkins/defaulted/compare/v1.0.2...v1.1.0) (2025-04-05)
 
 
