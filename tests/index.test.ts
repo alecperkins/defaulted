@@ -296,6 +296,7 @@ describe("defaulted", () => {
         },
       });
       expect(JSON.stringify(conf)).toEqual(`{"MYVAL":false,"XYZ":"XYZ","ABC":3,"ENVIRONMENT":"test"}`);
+      expect(conf.toJSON()).toEqual({"MYVAL":false,"XYZ":"XYZ","ABC":3,"ENVIRONMENT":"test"});
     });
   });
 

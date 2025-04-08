@@ -96,7 +96,7 @@ function _makeConfig <T extends {}> (args: {
         if (is_secret) {
           throw new Error('Cannot serialize secrets to JSON directly. If you do mean to serialize secrets, reassign them individually into a new object.');
         }
-        return Object.assign({}, actual_config);
+        return () => Object.assign({}, actual_config);
       }
       if ((Object as any).hasOwn(orig, key)) {
       return orig[key];
