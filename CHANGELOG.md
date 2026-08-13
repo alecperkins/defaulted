@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.2](https://github.com/alecperkins/defaulted/compare/v1.1.1...v1.1.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* Allow language plumbing accesses ([a1a3d97](https://github.com/alecperkins/defaulted/commit/a1a3d97c8b578c70d3c45b3f17d7182b072434c2))
+* Avoid throwing on secrets.toJSON until actual call ([79891aa](https://github.com/alecperkins/defaulted/commit/79891aadc921de1d40f483e094dc88f6584d3d48))
+* Gather all casting errors before throwing ([5d60e02](https://github.com/alecperkins/defaulted/commit/5d60e02328ec8877e727e00d335731955aa7a63a))
+* Guard against `delete` or `Object.defineProperty` ([5c07a75](https://github.com/alecperkins/defaulted/commit/5c07a7556f81dc9d14815018ab815b9afba431ab))
+* Guard against problematic whitespace ([61e269e](https://github.com/alecperkins/defaulted/commit/61e269e9a4b580db703e6cc4d954af331d7781e2))
+* Preserve engines, ensure its range satisfies used language features ([81bf9d8](https://github.com/alecperkins/defaulted/commit/81bf9d8de1abae18710539f788b4f37a192dce08))
+* Prevent util.inspect from leaking secrets ([720b311](https://github.com/alecperkins/defaulted/commit/720b311a5ce4e238853a52c93a5c960fbf8ad3c3))
+* Strictly disallow ENVIRONMENT as a config key ([5d36cc9](https://github.com/alecperkins/defaulted/commit/5d36cc9374536ce39535385fb7fbcf1c711b4f7f))
+* Validate per-ENVIRONMENT overrides ([8984faa](https://github.com/alecperkins/defaulted/commit/8984faa4c77dbcd24ac1a25d184a1000a39521a2))
+
 ## [1.1.1](https://github.com/alecperkins/defaulted/compare/v1.1.0...v1.1.1) (2025-04-08)
 
 
