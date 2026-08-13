@@ -1,4 +1,5 @@
 
+import { inspect } from "util";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import defaulted from '../src';
@@ -496,6 +497,31 @@ describe("defaulted", () => {
       });
       const secrets = defaulted.secrets([] as const);
       expect(() => (secrets as any).ENVIRONMENT).toThrow('Cannot read unspecified property on secrets: "ENVIRONMENT"');
+    });
+
+    test("redacts values when inspected", async () => {
+      overrideEnv({
+        MY_SECRET: "supersecret",
+        MY_OTHER_SECRET: "alsosecret",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+        "MY_OTHER_SECRET",
+      ] as const);
+      const output = inspect(secrets);
+      expect(output).not.toContain("supersecret");
+      expect(output).not.toContain("alsosecret");
+      expect(output).toEqual(`{ MY_SECRET: '[redacted]', MY_OTHER_SECRET: '[redacted]' }`);
+      expect(secrets.MY_SECRET).toEqual("supersecret");
+    });
+
+    test("redacts values when inspected indirectly", async () => {
+      overrideEnv({
+        MY_SECRET: "supersecret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect(inspect({ nested: secrets })).not.toContain("supersecret");
+      expect(inspect([secrets])).not.toContain("supersecret");
     });
 
     test("throws when trying to serialize to json", async () => {

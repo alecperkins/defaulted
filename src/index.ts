@@ -1,4 +1,6 @@
 
+const INSPECT_CUSTOM = Symbol.for("nodejs.util.inspect.custom");
+
 function _makeConfig <T extends {}> (args: {
   defaults: T;
   expected_keys: Set<keyof T>;
@@ -87,6 +89,23 @@ function _makeConfig <T extends {}> (args: {
     // Set this last so it doesn't get caught in validation.
     Object.assign(actual_config, {
       ENVIRONMENT: process.env.ENVIRONMENT,
+    });
+  }
+
+  if (is_secret) {
+    // `util.inspect`, and so `console.log`, unwraps the Proxy and reads the
+    // target directly, deliberately bypassing the traps below. Redacting has
+    // to happen on the target itself or every secret prints in cleartext.
+    // Non-enumerable so it stays out of the keys and out of `{ ...secrets }`.
+    Object.defineProperty(actual_config, INSPECT_CUSTOM, {
+      enumerable: false,
+      value: () => {
+        const redacted: { [key: string]: string } = {};
+        Object.keys(actual_config).forEach(key => {
+          redacted[key] = "[redacted]";
+        });
+        return redacted;
+      },
     });
   }
 
