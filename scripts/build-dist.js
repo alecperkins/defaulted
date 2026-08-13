@@ -34,7 +34,6 @@ const package_content = require(path.join(__dirname, '..', 'package.json'));
 delete package_content.scripts;
 delete package_content.devDependencies;
 delete package_content.private;
-delete package_content.engines;
 
 prepareDir();
 
