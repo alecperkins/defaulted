@@ -1,7 +1,6 @@
 import defaulted from "defaulted";
 
 const config = defaulted({
-  ENVIRONMENT: 'local',
   MY_HOST: "example.com",
   PORT: 1234,
 }, {
@@ -22,7 +21,8 @@ const secrets = defaulted.secrets([
 });
 
 if (
-  config.MY_HOST !== "example.com"
+  config.ENVIRONMENT !== "test"
+  || config.MY_HOST !== "example.com"
   || config.PORT !== 8080
   || secrets.API_KEY !== "mock_key"
 ) {
