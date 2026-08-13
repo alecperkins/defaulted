@@ -121,6 +121,17 @@ describe("defaulted", () => {
       expect(Object.keys(config)).toEqual(["ENVIRONMENT"]);
     });
 
+    test("throws if ENVIRONMENT is specified in the defaults", async () => {
+      expect(() => defaulted({ ENVIRONMENT: "local" }))
+        .toThrow('Cannot specify a default for "ENVIRONMENT": it is always read from process.env');
+    });
+
+    test("throws for an ENVIRONMENT default even when set in the env", async () => {
+      overrideEnv({ ENVIRONMENT: "prod" });
+      expect(() => defaulted({ ENVIRONMENT: "local" }))
+        .toThrow('Cannot specify a default for "ENVIRONMENT": it is always read from process.env');
+    });
+
     test("always provides ENVIRONMENT if not defined", async () => {
       const config = defaulted({});
       expect(config.ENVIRONMENT).toEqual(undefined);
@@ -594,6 +605,14 @@ describe("defaulted", () => {
     test("throws when accessing an undefined key", async () => {
       const secrets = defaulted.secrets([] as const);
       expect(() => (secrets as any).SECRET).toThrow('Cannot read unspecified property on secrets: "SECRET"');
+    });
+
+    test("allows ENVIRONMENT as a secret key", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      const secrets = defaulted.secrets(["ENVIRONMENT"] as const);
+      expect(secrets.ENVIRONMENT).toEqual("test");
     });
 
     test("does not include ENVIRONMENT by default", async () => {

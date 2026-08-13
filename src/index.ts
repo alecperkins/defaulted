@@ -22,6 +22,13 @@ function _makeConfig <T extends {}> (args: {
     include_ENVIRONMENT,
   } = args;
 
+  // `ENVIRONMENT` is always taken from process.env below, so a declared
+  // default for it could only ever be discarded. Reserve the name instead of
+  // silently ignoring the value.
+  if (include_ENVIRONMENT && expected_keys.has("ENVIRONMENT" as keyof T)) {
+    throw new Error(`Cannot specify a default for "ENVIRONMENT": it is always read from process.env`);
+  }
+
   const actual_config: typeof defaults = {
     ...defaults,
   };
@@ -112,7 +119,8 @@ function _makeConfig <T extends {}> (args: {
   }
 
   if (include_ENVIRONMENT) {
-    // Set this last so it doesn't get caught in validation.
+    // Set this last so it doesn't get caught in validation. Nothing can be
+    // overwritten here: the name is reserved above.
     Object.assign(actual_config, {
       ENVIRONMENT: process.env.ENVIRONMENT,
     });
