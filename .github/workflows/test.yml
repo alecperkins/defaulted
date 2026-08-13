@@ -16,7 +16,9 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x, 23.x]
+        node-version: [18.x, 22.x, 24.x, 26.x]
+        # Test the currently-supported node versions. Also test 18.x
+        # since that's the minimum declared version in our package.engines.
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     permissions:
