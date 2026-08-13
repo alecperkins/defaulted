@@ -44,8 +44,10 @@ function _makeConfig <T extends {}> (args: {
       let _override: string | number | boolean;
       switch (typeof defaults[_key]) {
         case "number": {
-          if (override === "") {
-            throw new Error(`Cannot cast to number from ""`);
+          // `Number` reads blank strings as 0, so they have to be rejected
+          // before casting. Surrounding whitespace on a real number is fine.
+          if (override.trim() === "") {
+            throw new Error(`Cannot cast to number from "${ override }"`);
           }
           _override = Number(override);
           if (Number.isNaN(_override)) {

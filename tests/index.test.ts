@@ -197,6 +197,22 @@ describe("defaulted", () => {
       overrideEnv({ MYVAL: "" });
       expect(() => defaulted({ MYVAL: 345 })).toThrow('Cannot cast to number from ""');
     });
+
+    test("disallows a whitespace-only environment string", async () => {
+      overrideEnv({ MYVAL: "   " });
+      expect(() => defaulted({ MYVAL: 345 })).toThrow('Cannot cast to number from "   "');
+    });
+
+    test("disallows tabs and newlines", async () => {
+      overrideEnv({ MYVAL: "\t\n" });
+      expect(() => defaulted({ MYVAL: 345 })).toThrow('Cannot cast to number from "\t\n"');
+    });
+
+    test("allows surrounding whitespace on a real number", async () => {
+      overrideEnv({ MYVAL: " 42 " });
+      const config = defaulted({ MYVAL: 345 });
+      expect(config.MYVAL).toEqual(42);
+    });
   });
 
   describe("booleans", () => {
