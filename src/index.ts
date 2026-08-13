@@ -98,8 +98,17 @@ function _makeConfig <T extends {}> (args: {
         }
         return () => Object.assign({}, actual_config);
       }
-      if ((Object as any).hasOwn(orig, key)) {
-      return orig[key];
+      // Symbols and inherited Object members are language plumbing, not
+      // config keys: throwing on them breaks coercion, inspection, and
+      // anything that probes the object generically. Only unknown string
+      // keys, ie actual typos, are errors.
+      if (typeof key === "symbol" || key in orig) {
+        return Reflect.get(orig, key);
+      }
+      // Promise resolution probes for `then` on any resolved value. Without
+      // this, `await config` and `Promise.resolve(config)` throw.
+      if (key === "then") {
+        return undefined;
       }
       throw new Error(`Cannot read unspecified property on ${ is_secret ? "secrets" : "config" }: "${ String(key) }"`);
     },

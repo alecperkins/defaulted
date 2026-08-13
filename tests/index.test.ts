@@ -79,6 +79,40 @@ describe("defaulted", () => {
       expect(() => (config as any).OTHERVAL).toThrow('Cannot read unspecified property on config: "OTHERVAL"');
     });
 
+    test("does not throw when probed as a thenable", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(() => (config as any).then).not.toThrow();
+      expect((config as any).then).toEqual(undefined);
+      await expect(Promise.resolve(config)).resolves.toBe(config);
+      expect((await config as any).MYVAL).toEqual("asdf");
+    });
+
+    test("reads a `then` key if it is specified", async () => {
+      const config = defaulted({ then: "asdf" });
+      expect(config.then).toEqual("asdf");
+    });
+
+    test("does not throw on symbol access", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(() => (config as any)[Symbol.toStringTag]).not.toThrow();
+      expect((config as any)[Symbol.toStringTag]).toEqual(undefined);
+      expect(Object.prototype.toString.call(config)).toEqual("[object Object]");
+      expect(() => (config as any)[Symbol.for("nodejs.util.inspect.custom")]).not.toThrow();
+    });
+
+    test("supports string coercion", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(`${ config }`).toEqual("[object Object]");
+      expect(String(config)).toEqual("[object Object]");
+    });
+
+    test("supports inherited Object methods", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(config.hasOwnProperty("MYVAL")).toEqual(true);
+      expect(config.hasOwnProperty("OTHERVAL")).toEqual(false);
+      expect(typeof config.valueOf).toEqual("function");
+    });
+
     test("always provides ENVIRONMENT", async () => {
       overrideEnv({ ENVIRONMENT: "someenv" });
       const config = defaulted({});
@@ -431,6 +465,24 @@ describe("defaulted", () => {
       expect(() => Object.defineProperty(secrets, "MY_SECRET", { value: "xyz" }))
         .toThrow('Cannot define read only property on secrets: "MY_SECRET"');
       expect(secrets.MY_SECRET).toEqual("secret");
+    });
+
+    test("does not throw when probed as a thenable", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect((secrets as any).then).toEqual(undefined);
+      await expect(Promise.resolve(secrets)).resolves.toBe(secrets);
+    });
+
+    test("does not throw on symbol access or coercion", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect((secrets as any)[Symbol.toStringTag]).toEqual(undefined);
+      expect(`${ secrets }`).toEqual("[object Object]");
     });
 
     test("throws when accessing an undefined key", async () => {
