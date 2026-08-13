@@ -280,6 +280,41 @@ describe("defaulted", () => {
 
   });
 
+  describe("casting", () => {
+    test("names the key that could not be cast", async () => {
+      overrideEnv({ MYVAL: "abc" });
+      expect(() => defaulted({ MYVAL: 345 })).toThrow('Cannot cast to number from "abc" for "MYVAL"');
+    });
+
+    test("tests all values so it can throw once", async () => {
+      overrideEnv({
+        NUM: "abc",
+        FLAG: "yes",
+        OTHER_NUM: "",
+      });
+      expect(() => defaulted({
+        NUM: 1,
+        FLAG: true,
+        OTHER_NUM: 2,
+      })).toThrow('Cannot cast to number from "abc" for "NUM"; Cannot cast to boolean from "yes" for "FLAG"; Cannot cast to number from "" for "OTHER_NUM"');
+    });
+
+    test("reports uncastable values before missing ones", async () => {
+      overrideEnv({
+        ENVIRONMENT: "prod",
+        NUM: "abc",
+      });
+      expect(() => defaulted({
+        NUM: 1,
+        NEEDED: "x",
+      }, {
+        prod: {
+          NEEDED: undefined,
+        },
+      })).toThrow('Cannot cast to number from "abc" for "NUM"');
+    });
+  });
+
   describe("ENVIRONMENT", () => {
     test("reads from environment despite ENVIRONMENT", async () => {
       overrideEnv({
@@ -410,6 +445,35 @@ describe("defaulted", () => {
       expect(config.MOCK).toEqual(false);
       expect(config.HOST).toEqual("smtp-echo.local");
       expect(config.UNSET).toEqual("from env");
+    });
+
+    test("reports unexpected keys before uncastable env values", async () => {
+      overrideEnv({
+        ENVIRONMENT: "prod",
+        PORT: "abc",
+      });
+      expect(() => defaulted({
+        PORT: 5432,
+      }, {
+        prod: {
+          TYPO: "x",
+        } as any,
+      })).toThrow('Unexpected keys in overrides: "TYPO"');
+    });
+
+    test("reports invalid override values before uncastable env values", async () => {
+      overrideEnv({
+        ENVIRONMENT: "prod",
+        PORT: "abc",
+      });
+      expect(() => defaulted({
+        PORT: 5432,
+        HOST: "localhost",
+      }, {
+        prod: {
+          HOST: 1,
+        } as any,
+      })).toThrow('Invalid values in overrides: "HOST" in "prod" must be string, got number');
     });
 
     test("throws if an override specifies a key not in the defaults", async () => {

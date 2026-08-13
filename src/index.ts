@@ -6,6 +6,40 @@ function _typeOf (value: unknown): string {
   return value === null ? "null" : typeof value;
 }
 
+// Throws rather than returning an error so every call site casts or fails,
+// leaving the caller to decide whether to collect or rethrow.
+function _cast (value: string, expected_type: string): string | number | boolean {
+  switch (expected_type) {
+    case "number": {
+      // `Number` reads blank strings as 0, so they have to be rejected
+      // before casting. Surrounding whitespace on a real number is fine.
+      if (value.trim() === "") {
+        throw new Error(`Cannot cast to number from "${ value }"`);
+      }
+      const cast = Number(value);
+      if (Number.isNaN(cast)) {
+        throw new Error(`Cannot cast to number from "${ value }"`);
+      }
+      return cast;
+    }
+    case "boolean": {
+      if (value.toLowerCase() === "true") {
+        return true;
+      } else if (value.toLowerCase() === "false") {
+        return false;
+      } else if (value === "1") {
+        return true;
+      } else if (value === "0") {
+        return false;
+      }
+      throw new Error(`Cannot cast to boolean from "${ value }"`);
+    }
+    default: {
+      return value;
+    }
+  }
+}
+
 function _makeConfig <T extends {}> (args: {
   defaults: T;
   expected_keys: Set<keyof T>;
@@ -35,6 +69,7 @@ function _makeConfig <T extends {}> (args: {
 
   const unexpected_keys = new Set();
   const invalid_values = new Set();
+  const uncastable_values = new Set();
   const missing_keys = new Set();
   if (overrides) {
     Object.entries(overrides).forEach(([env, override]) => {
@@ -61,6 +96,13 @@ function _makeConfig <T extends {}> (args: {
     });
   }
 
+  if (unexpected_keys.size > 0) {
+    throw new Error(`Unexpected ${ is_secret ? "secret " : "" }keys in overrides: "${ Array.from(unexpected_keys).join('","') }"`);
+  }
+  if (invalid_values.size > 0) {
+    throw new Error(`Invalid ${ is_secret ? "secret " : "" }values in overrides: ${ Array.from(invalid_values).join("; ") }`);
+  }
+
   if (overrides && process.env.ENVIRONMENT) {
     Object.assign(actual_config, overrides[process.env.ENVIRONMENT] ?? {})
   }
@@ -69,50 +111,20 @@ function _makeConfig <T extends {}> (args: {
     const _key = key as keyof typeof defaults;
     const override = process.env[_key as string];
     if (typeof override === "string") {
-      let _override: string | number | boolean;
-      switch (typeof defaults[_key]) {
-        case "number": {
-          // `Number` reads blank strings as 0, so they have to be rejected
-          // before casting. Surrounding whitespace on a real number is fine.
-          if (override.trim() === "") {
-            throw new Error(`Cannot cast to number from "${ override }"`);
-          }
-          _override = Number(override);
-          if (Number.isNaN(_override)) {
-            throw new Error(`Cannot cast to number from "${ override }"`);
-          }
-          break;
-        }
-        case "boolean": {
-          if (override.toLowerCase() === "true") {
-            _override = true;
-          } else if (override.toLowerCase() === "false") {
-            _override = false;
-          } else if (override === "1") {
-            _override = true;
-          } else if (override === "0") {
-            _override = false;
-          } else {
-            throw new Error(`Cannot cast to boolean from "${ override }"`);
-          }
-          break;
-        }
-        default: {
-          _override = override;
-        }
+      try {
+        (actual_config as any)[_key] = _cast(override, typeof defaults[_key]);
+      } catch (error) {
+        // Collected rather than rethrown so one run reports every bad value.
+        uncastable_values.add(`${ (error as Error).message } for "${ key }"`);
       }
-      (actual_config as any)[_key] = _override;
     }
     if (typeof actual_config[key] === "undefined") {
       missing_keys.add(key);
     }
   });
 
-  if (unexpected_keys.size > 0) {
-    throw new Error(`Unexpected ${ is_secret ? "secret " : "" }keys in overrides: "${ Array.from(unexpected_keys).join('","') }"`);
-  }
-  if (invalid_values.size > 0) {
-    throw new Error(`Invalid ${ is_secret ? "secret " : "" }values in overrides: ${ Array.from(invalid_values).join("; ") }`);
+  if (uncastable_values.size > 0) {
+    throw new Error(Array.from(uncastable_values).join("; "));
   }
   if (missing_keys.size > 0) {
     throw new Error(`Required ${ is_secret ? "secret " : "" }keys not present in env: "${ Array.from(missing_keys).join('","') }"`);
