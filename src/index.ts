@@ -1,6 +1,11 @@
 
 const INSPECT_CUSTOM = Symbol.for("nodejs.util.inspect.custom");
 
+// `typeof null` is "object", which is unhelpful when reporting a bad value.
+function _typeOf (value: unknown): string {
+  return value === null ? "null" : typeof value;
+}
+
 function _makeConfig <T extends {}> (args: {
   defaults: T;
   expected_keys: Set<keyof T>;
@@ -22,12 +27,28 @@ function _makeConfig <T extends {}> (args: {
   };
 
   const unexpected_keys = new Set();
+  const invalid_values = new Set();
   const missing_keys = new Set();
   if (overrides) {
-    Object.values(overrides).forEach(override => {
+    Object.entries(overrides).forEach(([env, override]) => {
       Object.keys(override).forEach(key => {
         if (!expected_keys.has(key as any)) {
           unexpected_keys.add(key);
+          return;
+        }
+        const value = (override as any)[key];
+        // An explicit undefined is how an override marks a key as mandatory
+        // in the environment, so it is always allowed.
+        if (typeof value === "undefined") {
+          return;
+        }
+        // Secrets have no typed defaults to compare against, and are always
+        // passed through as strings.
+        const default_value = defaults[key as keyof T];
+        const expected_type = is_secret ? "string" : _typeOf(default_value);
+        const actual_type = _typeOf(value);
+        if (expected_type !== "undefined" && actual_type !== expected_type) {
+          invalid_values.add(`"${ key }" in "${ env }" must be ${ expected_type }, got ${ actual_type }`);
         }
       });
     });
@@ -82,6 +103,9 @@ function _makeConfig <T extends {}> (args: {
 
   if (unexpected_keys.size > 0) {
     throw new Error(`Unexpected ${ is_secret ? "secret " : "" }keys in overrides: "${ Array.from(unexpected_keys).join('","') }"`);
+  }
+  if (invalid_values.size > 0) {
+    throw new Error(`Invalid ${ is_secret ? "secret " : "" }values in overrides: ${ Array.from(invalid_values).join("; ") }`);
   }
   if (missing_keys.size > 0) {
     throw new Error(`Required ${ is_secret ? "secret " : "" }keys not present in env: "${ Array.from(missing_keys).join('","') }"`);

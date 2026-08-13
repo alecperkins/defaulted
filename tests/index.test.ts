@@ -327,6 +327,80 @@ describe("defaulted", () => {
       })).toThrow('Required keys not present in env: "MYVAL","OTHERVAL"');
     });
 
+    test("throws if an override value does not match the default type", async () => {
+      overrideEnv({
+        ENVIRONMENT: "prod",
+      });
+      expect(() => defaulted({
+        PORT: 5432,
+      }, {
+        prod: {
+          PORT: "5432",
+        } as any, // Typescript will normally prevent this scenario
+      })).toThrow('Invalid values in overrides: "PORT" in "prod" must be number, got string');
+    });
+
+    test("distinguishes a null override from an object", async () => {
+      overrideEnv({
+        ENVIRONMENT: "prod",
+      });
+      expect(() => defaulted({
+        HOST: "localhost",
+      }, {
+        prod: {
+          HOST: null,
+        } as any, // Typescript will normally prevent this scenario
+      })).toThrow('Invalid values in overrides: "HOST" in "prod" must be string, got null');
+      expect(() => defaulted({
+        HOST: "localhost",
+      }, {
+        prod: {
+          HOST: {},
+        } as any,
+      })).toThrow('Invalid values in overrides: "HOST" in "prod" must be string, got object');
+    });
+
+    test("checks override values in every ENVIRONMENT so it can throw once", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+      });
+      expect(() => defaulted({
+        PORT: 5432,
+        HOST: "localhost",
+      }, {
+        test: {
+          PORT: "5432",
+        } as any,
+        prod: {
+          HOST: 1,
+        } as any,
+      })).toThrow('Invalid values in overrides: "PORT" in "test" must be number, got string; "HOST" in "prod" must be string, got number');
+    });
+
+    test("allows overrides that match the default type", async () => {
+      overrideEnv({
+        ENVIRONMENT: "test",
+        UNSET: "from env",
+      });
+      const config = defaulted({
+        PORT: 5432,
+        MOCK: true,
+        HOST: "localhost",
+        UNSET: "asdf",
+      }, {
+        test: {
+          PORT: 1234,
+          MOCK: false,
+          HOST: "smtp-echo.local",
+          UNSET: undefined,
+        },
+      });
+      expect(config.PORT).toEqual(1234);
+      expect(config.MOCK).toEqual(false);
+      expect(config.HOST).toEqual("smtp-echo.local");
+      expect(config.UNSET).toEqual("from env");
+    });
+
     test("throws if an override specifies a key not in the defaults", async () => {
       overrideEnv({
         ENVIRONMENT: "test",
@@ -435,6 +509,21 @@ describe("defaulted", () => {
         "MY_SECRET",
       ]);
       expect(secrets.MY_SECRET).toEqual("");
+    });
+
+    test("throws if an override value is not a string", async () => {
+      overrideEnv({
+        ENVIRONMENT: "local",
+      });
+      expect(() => {
+        defaulted.secrets([
+          "MY_SECRET",
+        ] as const, {
+          local: {
+            MY_SECRET: 123,
+          } as any, // Typescript will normally prevent this scenario
+        });
+      }).toThrow('Invalid secret values in overrides: "MY_SECRET" in "local" must be string, got number');
     });
 
     test("throws if an override specifies a key not in the key list", async () => {
