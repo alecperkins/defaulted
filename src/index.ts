@@ -106,6 +106,14 @@ function _makeConfig <T extends {}> (args: {
     set: (orig, key, val) => {
       throw new Error(`Cannot assign to read only property on ${ is_secret ? "secrets" : "config" }: "${ String(key) }"`);
     },
+    // Without these, `delete` and `Object.defineProperty` bypass the `set`
+    // trap and mutate the underlying object directly.
+    deleteProperty: (orig, key) => {
+      throw new Error(`Cannot delete read only property on ${ is_secret ? "secrets" : "config" }: "${ String(key) }"`);
+    },
+    defineProperty: (orig, key, descriptor) => {
+      throw new Error(`Cannot define read only property on ${ is_secret ? "secrets" : "config" }: "${ String(key) }"`);
+    },
   });
   return config as any;
 }

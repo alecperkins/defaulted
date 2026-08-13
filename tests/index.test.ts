@@ -61,6 +61,24 @@ describe("defaulted", () => {
       expect(() => (config as any).OTHERVAL = "xyz").toThrow('Cannot assign to read only property on config: "OTHERVAL"');
     });
 
+    test("throws when trying to delete a key", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(() => delete (config as any).MYVAL).toThrow('Cannot delete read only property on config: "MYVAL"');
+      expect(config.MYVAL).toEqual("asdf");
+      expect(() => delete (config as any).OTHERVAL).toThrow('Cannot delete read only property on config: "OTHERVAL"');
+      expect(JSON.stringify(config)).toEqual(`{"MYVAL":"asdf"}`);
+    });
+
+    test("throws when trying to define a key", async () => {
+      const config = defaulted({ MYVAL: "asdf" });
+      expect(() => Object.defineProperty(config, "MYVAL", { value: "xyz" }))
+        .toThrow('Cannot define read only property on config: "MYVAL"');
+      expect(config.MYVAL).toEqual("asdf");
+      expect(() => Object.defineProperty(config, "OTHERVAL", { value: "xyz" }))
+        .toThrow('Cannot define read only property on config: "OTHERVAL"');
+      expect(() => (config as any).OTHERVAL).toThrow('Cannot read unspecified property on config: "OTHERVAL"');
+    });
+
     test("always provides ENVIRONMENT", async () => {
       overrideEnv({ ENVIRONMENT: "someenv" });
       const config = defaulted({});
@@ -394,6 +412,25 @@ describe("defaulted", () => {
       const secrets = defaulted.secrets(["MY_SECRET"] as const);
       expect(secrets.MY_SECRET).toEqual("secret");
       expect(() => (secrets as any).MY_SECRET = "xyz").toThrow('Cannot assign to read only property on secrets: "MY_SECRET"');
+    });
+
+    test("throws when trying to delete a key", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect(() => delete (secrets as any).MY_SECRET).toThrow('Cannot delete read only property on secrets: "MY_SECRET"');
+      expect(secrets.MY_SECRET).toEqual("secret");
+    });
+
+    test("throws when trying to define a key", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets(["MY_SECRET"] as const);
+      expect(() => Object.defineProperty(secrets, "MY_SECRET", { value: "xyz" }))
+        .toThrow('Cannot define read only property on secrets: "MY_SECRET"');
+      expect(secrets.MY_SECRET).toEqual("secret");
     });
 
     test("throws when accessing an undefined key", async () => {
