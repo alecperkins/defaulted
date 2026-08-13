@@ -712,6 +712,27 @@ describe("defaulted", () => {
       expect(inspect([secrets])).not.toContain("supersecret");
     });
 
+    test("allows toJSON to be feature-detected", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ] as const);
+      expect(() => (secrets as any).toJSON).not.toThrow();
+      expect(typeof (secrets as any).toJSON).toEqual("function");
+    });
+
+    test("throws when toJSON is called", async () => {
+      overrideEnv({
+        MY_SECRET: "secret",
+      });
+      const secrets = defaulted.secrets([
+        "MY_SECRET",
+      ] as const);
+      expect(() => (secrets as any).toJSON()).toThrow('Cannot serialize secrets to JSON directly');
+    });
+
     test("throws when trying to serialize to json", async () => {
       overrideEnv({
         ENVIRONMENT: "test",

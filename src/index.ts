@@ -159,7 +159,11 @@ function _makeConfig <T extends {}> (args: {
     get: (orig, key) => {
       if (key === 'toJSON') {
         if (is_secret) {
-          throw new Error('Cannot serialize secrets to JSON directly. If you do mean to serialize secrets, reassign them individually into a new object.');
+          // Throw on call, not on access: serializers feature-detect
+          // `toJSON` before using it, and reading it is not the mistake.
+          return () => {
+            throw new Error('Cannot serialize secrets to JSON directly. If you do mean to serialize secrets, reassign them individually into a new object.');
+          };
         }
         return () => Object.assign({}, actual_config);
       }
