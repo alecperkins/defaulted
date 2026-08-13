@@ -99,7 +99,7 @@ If you _do_ want to send email from your local machine, you can disable the mock
 
 The resulting config object will have explicit keys matching the default, to aide with type checking and autocomplete. Attempting to access a key that was not specified will throw. Those keys will also be read-only, and will likewise throw on assignment. (Doing either will also fail type checking.)
 
-If the environment specifies a value that cannot be cast to the type, `defaulted` will throw. See below for specifics on acceptable values.
+If the environment specifies a value that cannot be cast to the type, `defaulted` will throw. Invalid values in overrides will also throw. See below for specifics on acceptable values.
 
 #### Empty strings
 
@@ -247,7 +247,9 @@ Storing more complex values in the env beyond a singular token is not recommende
 
 To maximize compatibility, and reinforce the notion that these values should be constant for the life of the process, use uppercase with underscores, eg `FEATURE_FLAG`.
 
-Any valid object property name is allowed for defaults. This includes mixed cases, spaces, and non-alphanumeric characters. That said, spaces are disallowed in most [POSIX environments](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html), and some even disallow lowercase. Others are case-insensitive. Even if there is a default defined, the app may not be able to read `some key` from the environment.
+Almost any valid object property name is allowed for defaults. This includes mixed cases, spaces, and non-alphanumeric characters. That said, spaces are disallowed in most [POSIX environments](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html), and some even disallow lowercase. Others are case-insensitive. Even if there is a default defined, the app may not be able to read `some key` from the environment.
+
+Only `ENVIRONMENT` is explicitly disallowed since it is how the config knows which overrides to use.
 
 #### Client-side
 
